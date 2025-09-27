@@ -1,0 +1,534 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Ресурс Изобилия — онлайн-интенсив</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    /* ===== ПАЛИТРА ===== */
+    --bg:#faf7f1; --text:#181a1f; --muted:#656b78;
+    --gold:#CDAF61; --gold2:#EEDCA5; --ring:rgba(205,175,97,.35);
+    --surface:#fff; --b1:1px solid rgba(0,0,0,.06);
+    --radius:18px; --shadow:0 12px 26px rgba(0,0,0,.08);
+    --grad:linear-gradient(135deg,#cdae60 0%,#e9d28e 55%,#fff3c8 100%);
+
+    /* ===== ВЕРХНЯЯ БЕГУЩАЯ СТРОКА ===== */
+    --topbar-h:38px;
+
+    /* ===== HERO — ФОТО + БЛЮР (меняй здесь) ===== */
+    --hero-img:url('hero.JPG');     /* ← фоновое фото хиро */
+    --hero-min-h:92vh;              /* минимальная высота секции */
+    --hero-pos-y:40%;               /* кадр по вертикали (0–100%) */
+    --hero-scale:1.2;               /* зум фото (1 = без зума; 1.5 = +50%) */
+    --hero-content-bottom:20vh;     /* отступ текста от низа секции */
+
+    /* Светлый/тёмный блюр от середины к низу */
+    --hero-blur:55px;               /* сила блюра в нижней части */
+    --hero-blur-start:0%;           /* с какого места начинается (в %) */
+    --hero-saturate:112%;           /* насыщенность фото */
+    --hero-brightness:.96;          /* яркость фото */
+    --hero-veil-rgb:0,0,0;          /* цвет вуали (белая: 255,255,255) */
+    --hero-veil-top:0.00;           /* прозрачность у старта */
+    --hero-veil-bottom:0.55;        /* плотность у низа */
+
+    /* ===== АВТОР ===== */
+    --author-img:url('avatar.JPG'); /* ← фото автора в круге */
+    --author-zoom:2;                /* приближение портрета (1..1.3 рекомендовано) */
+    --rays-opacity:.22;             /* яркость «лучей» вокруг аватара */
+    --rays-speed:12s;               /* скорость вращения лучей */
+
+    /* ===== ПУЛИ-ТОЧКИ ===== */
+    --dot-size:12px;                /* размер золотой точки */
+    --dot-top:0.5em;                /* вертикальное смещение точки */
+    --dot-gap:28px;                 /* отступ текста от точки */
+  }
+
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 Manrope,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;overflow-x:hidden}
+  img{max-width:100%;display:block}
+  a{color:inherit;text-decoration:none}
+  .wrap{width:min(1140px,94%);margin-inline:auto}
+  section{padding:84px 0;position:relative}
+
+  /* Заголовки — центр, единый стиль */
+  h1,h2{font-family:"Playfair Display","Cormorant Garamond",serif}
+  .h1{
+    font-size:clamp(48px,7.5vw,92px);
+    line-height:1.03;margin:8px 0 16px;text-align:center;color:#f8f5e9;
+    text-shadow:0 0 4px rgba(230,210,160,.6),0 0 10px rgba(212,185,120,.4),0 0 18px rgba(197,170,100,.3)
+  }
+  .h2{font-size:clamp(36px,5vw,58px);margin:0 0 12px;text-align:center;text-shadow:0 0 14px rgba(205,175,97,.16)}
+  .lead{font-size:clamp(18px,2vw,22px);color:#fff;font-style:italic;max-width:980px;margin:0 auto;text-align:center}
+
+  /* Кнопки */
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:16px 30px;border-radius:999px;
+       font-weight:800;letter-spacing:.2px;background:var(--grad);color:#1b1d22;box-shadow:0 0 0 0 var(--ring);
+       transition:transform .2s,box-shadow .2s;position:relative;overflow:hidden;animation:btnpulse 2.1s ease-in-out infinite}
+  .btn:hover{transform:translateY(-2px);box-shadow:0 10px 28px rgba(205,175,97,.35)}
+  @keyframes btnpulse{0%{box-shadow:0 0 0 0 var(--ring)}70%{box-shadow:0 0 0 18px rgba(205,175,97,0)}100%{box-shadow:0 0 0 0 rgba(205,175,97,0)}}
+  .ripple{position:absolute;border-radius:50%;transform:scale(0);background:rgba(255,255,255,.5);animation:ripple .6s linear;pointer-events:none}
+  @keyframes ripple{to{transform:scale(12);opacity:0}}
+
+  /* Появление на скролле */
+  [data-anim]{opacity:0;transform:translateY(18px);transition:opacity .65s ease,transform .65s ease}
+  [data-anim].in{opacity:1;transform:none}
+
+  /* ===== ВЕРХНЯЯ БЕГУЩАЯ СТРОКА ===== */
+  .topbar{position:sticky;top:0;z-index:50;height:var(--topbar-h);backdrop-filter:saturate(120%) blur(4px);
+          background:linear-gradient(180deg,rgba(255,255,255,.85),rgba(255,255,255,.65));border-bottom:1px solid rgba(0,0,0,.06)}
+  .topbar .marquee{height:100%;overflow:hidden}
+  .topbar .track{display:flex;gap:26px;align-items:center;height:100%;white-space:nowrap;width:max-content;animation:mar 25s linear infinite;
+                 padding-inline:10px;background:
+                 linear-gradient(90deg,rgba(205,175,97,.18),transparent 10%,transparent 90%,rgba(205,175,97,.18)),
+                 linear-gradient(180deg,transparent 35%,rgba(205,175,97,.10) 60%,transparent 100%)}
+  .topbar b{font-weight:800;color:#8a6d2c}
+  @keyframes mar{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
+
+  /* ===== HERO — фото видно; блюр/вуаль снизу; текст у нижнего края ===== */
+  .hero{min-height:var(--hero-min-h);padding:0;overflow:hidden}
+  .hero::before{
+    content:"";position:absolute;inset:0;z-index:0;
+    background:var(--hero-img) center var(--hero-pos-y)/cover no-repeat;
+    filter:saturate(var(--hero-saturate)) brightness(var(--hero-brightness));
+    transform:scale(var(--hero-scale));transform-origin:center center;
+  }
+  .hero::after{
+    content:"";position:absolute;inset:0;z-index:0;
+    backdrop-filter:blur(var(--hero-blur));
+    -webkit-backdrop-filter:blur(var(--hero-blur));
+    background:linear-gradient(to bottom,
+      rgba(var(--hero-veil-rgb),var(--hero-veil-top)) var(--hero-blur-start),
+      rgba(var(--hero-veil-rgb),var(--hero-veil-bottom)) 100%);
+    -webkit-mask-image:linear-gradient(to bottom, transparent calc(var(--hero-blur-start) - 12%), #000 100%);
+            mask-image:linear-gradient(to bottom, transparent calc(var(--hero-blur-start) - 12%), #000 100%);
+  }
+  .hero .content{min-height:var(--hero-min-h);display:grid;place-items:end center;padding-bottom:var(--hero-content-bottom);position:relative;z-index:1;text-align:center}
+  .hero .cta{margin-top:18px}
+
+  /* ===== ЕДИНЫЕ ЗОЛОТЫЕ ТОЧКИ ===== */
+  .dot-list{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+  .dot-list li{position:relative;padding-left:var(--dot-gap);font-size:clamp(18px,2vw,22px)}
+  .dot-list li::before{
+    content:"";position:absolute;left:0;top:var(--dot-top);width:var(--dot-size);height:var(--dot-size);border-radius:50%;
+    background:linear-gradient(135deg,var(--gold),var(--gold2));
+    box-shadow:0 0 10px rgba(205,175,97,.45), inset 0 0 0 2px rgba(255,255,255,.6);
+  }
+
+  /* ===== АВТОР ===== */
+  #author .content{max-width:1040px;margin:0 auto}
+  .avatar-wrap{display:grid;place-items:center;margin-top:6px}
+  .circle{
+    width:280px;height:280px;border-radius:50%;position:relative;overflow:hidden;
+    background:var(--author-img) center 45%/calc(100%*var(--author-zoom)) no-repeat;
+    border:1px solid rgba(205,175,97,.6);box-shadow:0 10px 30px rgba(0,0,0,.08),0 0 60px rgba(205,175,97,.22);
+  }
+  .circle::before{
+    content:"";position:absolute;inset:-26px;border-radius:50%;
+    background:
+      repeating-conic-gradient(from 0deg,
+        rgba(205,175,97,var(--rays-opacity)) 0deg,
+        rgba(205,175,97,0) 6deg,
+        rgba(205,175,97,0) 12deg),
+      radial-gradient(closest-side, rgba(255,255,255,.0) 68%, rgba(255,255,255,1) 70%);
+    filter:blur(6px);animation:spin var(--rays-speed) linear infinite;z-index:-1;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .author-role{margin:10px auto 18px;text-align:center;color:var(--muted);font-weight:800;letter-spacing:.2px}
+
+  /* Плавное золотое подчёркивание для акцентных фраз */
+  .emph{background:linear-gradient(transparent 65%, rgba(238,220,165,.5) 0);background-size:0% 100%;background-repeat:no-repeat;border-radius:6px}
+  .in .emph{animation:reveal 1s ease forwards}
+  @keyframes reveal{to{background-size:100% 100%}}
+
+  /* Программа (аккордеон) */
+  .accordion{display:grid;gap:14px;max-width:1040px;margin:0 auto}
+  .acc-item{background:var(--surface);border:var(--b1);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+  .acc-head{padding:20px 22px;font-weight:800;font-size:clamp(18px,2vw,22px);cursor:pointer;text-align:center}
+  .acc-body{display:grid;grid-template-rows:0fr;transition:grid-template-rows .45s ease}
+  .acc-inner{overflow:hidden}
+  .acc-list{padding:0 22px 20px}
+  .bonus-btn{display:inline-flex;align-items:center;gap:10px;margin:14px auto 0;padding:12px 20px;border-radius:999px;border:0;cursor:pointer;background:var(--grad);color:#1b1d22;font-weight:900;animation:btnpulse 2.1s ease-in-out infinite}
+  .bonus-panel{margin-top:12px;border:1px dashed rgba(205,175,97,.6);border-radius:14px;padding:14px 16px;background:rgba(255,255,255,.75);transform-origin:top;transform:scaleY(.85);opacity:0;display:none}
+  .bonus-panel.show{display:block;animation:bonusIn .35s ease forwards}
+  @keyframes bonusIn{to{transform:scaleY(1);opacity:1}}
+
+  /* Для кого */
+  .for-card{background:var(--surface);border:var(--b1);border-radius:16px;padding:26px;max-width:1040px;margin:0 auto;box-shadow:var(--shadow)}
+  .for-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;margin:0;padding:0;list-style:none}
+  @media (max-width:900px){.for-grid{grid-template-columns:1fr}}
+  .for-grid li{position:relative;padding-left:var(--dot-gap);font-size:clamp(18px,2vw,22px)}
+  .for-grid li::before{
+    content:"";position:absolute;left:0;top:var(--dot-top);width:var(--dot-size);height:var(--dot-size);border-radius:50%;
+    background:linear-gradient(135deg,var(--gold),var(--gold2));box-shadow:0 0 10px rgba(205,175,97,.45), inset 0 0 0 2px rgba(255,255,255,.6)
+  }
+
+  /* Результаты */
+  .result-list{list-style:none;display:grid;gap:14px;margin:0 auto;max-width:1040px;padding:0}
+  .result-list li{position:relative;padding-left:var(--dot-gap);font-size:clamp(18px,2.1vw,22px)}
+  .result-list li::before{
+    content:"";position:absolute;left:0;top:var(--dot-top);width:var(--dot-size);height:var(--dot-size);border-radius:50%;
+    background:linear-gradient(135deg,var(--gold),var(--gold2));box-shadow:0 0 10px rgba(205,175,97,.45), inset 0 0 0 2px rgba(255,255,255,.6)
+  }
+  .result-list li .txt{background:linear-gradient(transparent 65%, rgba(238,220,165,.5) 0);background-size:0% 100%;background-repeat:no-repeat;border-radius:6px}
+  .result-list li.in .txt{animation:reveal 1s ease forwards}
+
+  /* Тарифы */
+  .pricing{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px;max-width:1040px;margin:0 auto}
+  @media (max-width:900px){.pricing{grid-template-columns:1fr}}
+  .price-card{position:relative;padding:26px;background:var(--surface);border:1px solid rgba(0,0,0,.06);border-radius:18px;box-shadow:var(--shadow)}
+  .ribbon{position:absolute;top:14px;right:-40px;transform:rotate(18deg);background:var(--grad);color:#1b1d22;font-weight:900;padding:6px 60px;border-radius:999px;font-size:12px}
+  .price{font-size:40px;font-weight:900;color:#6f5822;margin:8px 0 14px}
+  .price-features{list-style:none;margin:0 0 18px;padding:0;display:grid;gap:10px}
+  .price-features li{position:relative;padding-left:var(--dot-gap);font-size:16.5px}
+  .price-features li::before{
+    content:"";position:absolute;left:0;top:.55em;width:10px;height:10px;border-radius:50%;
+    background:linear-gradient(135deg,var(--gold),var(--gold2));box-shadow:0 0 8px rgba(205,175,97,.45), inset 0 0 0 2px rgba(255,255,255,.6)
+  }
+
+  /* ===== ЧЕКБОКСЫ СОГЛАСИЙ ===== */
+  .checks{max-width:1040px;margin:16px auto 0;padding:18px 18px;border:1px solid rgba(0,0,0,.06);
+    border-radius:16px;background:var(--surface);box-shadow:var(--shadow)}
+  .check{display:flex;align-items:flex-start;gap:12px;padding:10px 4px}
+  .check + .check{border-top:1px dashed rgba(0,0,0,.08)}
+  .check input{appearance:none;-webkit-appearance:none;inline-size:22px;block-size:22px;min-width:22px;border:2px solid rgba(0,0,0,.25);
+    border-radius:6px;margin-top:2px;display:grid;place-items:center;outline:none;cursor:pointer;background:#fff;transition:.2s}
+  .check input:checked{border-color:transparent;background:linear-gradient(135deg,var(--gold),var(--gold2));
+    box-shadow:0 0 0 3px rgba(205,175,97,.25)}
+  .check input:focus-visible{outline:3px solid rgba(205,175,97,.55);outline-offset:2px}
+  .check label{font-size:15.5px;line-height:1.45;cursor:pointer}
+  .check a{color:#2d5db3;text-decoration:underline}
+
+  /* Состояние блокировки кнопок покупки */
+  #pricing .price-card .btn[disabled]{filter:grayscale(.35) opacity(.65);pointer-events:none}
+
+  /* Консультация + соцсети */
+  #consult{padding:68px 0}
+  .consult-card{background:var(--surface);border:var(--b1);border-radius:16px;box-shadow:var(--shadow);padding:28px;text-align:center}
+  .consult-sub{color:var(--muted);max-width:800px;margin:8px auto 18px}
+
+  .socials{display:flex;gap:14px;justify-content:center;margin-top:14px}
+  .soc{--sz:48px;width:var(--sz);height:var(--sz);border-radius:999px;display:grid;place-items:center;background:var(--surface);border:1px solid rgba(0,0,0,.06);box-shadow:0 6px 16px rgba(0,0,0,.06);position:relative;overflow:hidden}
+  .soc::after{content:"";position:absolute;inset:0;border-radius:inherit;box-shadow:0 0 0 0 var(--ring);animation:btnpulse 2.6s ease-in-out infinite;pointer-events:none}
+  .soc svg{width:22px;height:22px;fill:#1b1d22}
+
+  footer{padding:56px 0;border-top:1px solid rgba(0,0,0,.06);text-align:center;color:#6b6f7a}
+</style>
+</head>
+<body>
+
+<!-- ВЕРХНЯЯ БЕГУЩАЯ СТРОКА -->
+<div class="topbar" aria-label="Хэштеги">
+  <div class="marquee">
+    <div class="track">
+      <span>#ресурс_изобилия</span><b>#анима</b><span>#анимус</span><span>#тень</span><b>#архетипы</b><span>#женская_энергия</span><span>#телесная_терапия</span><b>#медитация</b><span>#ментальный_мост</span><span>#отношения</span><b>#самоценность</b><span>#изобилие</span>
+      <span>#ресурс_изобилия</span><b>#анима</b><span>#анимус</span><span>#тень</span><b>#архетипы</b><span>#женская_энергия</span><span>#телесная_терапия</span><b>#медитация</b><span>#ментальный_мост</span><span>#отношения</span><b>#самоценность</b><span>#изобилие</span>
+    </div>
+  </div>
+</div>
+
+<!-- 1) HERO -->
+<section class="hero" id="home">
+  <div class="wrap content" data-anim>
+    <h1 class="h1">РЕСУРС ИЗОБИЛИЯ</h1>
+    <p class="lead">Получи ключ к дверям твоего бессознательного и перепрошей свой сценарий отношений с мужчинами и с собой.</p>
+    <div class="cta" data-anim><a href="#program" class="btn">ХОЧУ НА ИНТЕНСИВ</a></div>
+  </div>
+</section>
+
+<!-- 2) АВТОР (Информация обо мне) -->
+<section id="author">
+  <div class="wrap content">
+    <h2 class="h2" data-anim>Медина Абильвапова</h2>
+    <div class="avatar-wrap" data-anim>
+      <div class="circle" aria-label="Фото автора"></div>
+    </div>
+    <div class="author-role" data-anim>Психолог · создательница трансформационной программы</div>
+
+    <ul class="author-list dot-list" data-anim>
+      <li><span class="emph">Дипломированный психолог, СПбГУП</span></li>
+      <li><span class="emph">Доход с блога от 500 000 ₽ в месяц</span></li>
+      <li><span class="emph">Мужчины дарят от 1 000 000 ₽ каждый месяц</span></li>
+      <li><span class="emph">Похудела на 16 кг</span></li>
+      <li><span class="emph">Вывела 3 девушек в реализацию с доходом 1 000 000 ₽</span></li>
+      <li><span class="emph">Говорю на 4 языках</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- 3) ПРОГРАММА -->
+<section id="program">
+  <div class="wrap">
+    <h2 class="h2" data-anim>Программа интенсива</h2>
+    <div class="accordion" data-anim>
+      <!-- 1 -->
+      <div class="acc-item" data-anim>
+        <div class="acc-head" role="button" tabindex="0" aria-expanded="false">1 модуль — Знакомство со своей тенью</div>
+        <div class="acc-body"><div class="acc-inner">
+          <div class="acc-list">
+            <ul class="dot-list">
+              <li>Твой Анимус: архетип внутреннего мужчины</li>
+              <li>Твоя Анима: архетип внутренней женщины</li>
+              <li>Выявление базовых ограничивающих установок и работа с ними</li>
+            </ul>
+            <button class="bonus-btn" type="button" data-bonus="#b1">Показать бонус</button>
+            <div id="b1" class="bonus-panel">Медитация на знакомство с Анимой и Анимусом: визуализация и закрепление образов (в записи).</div>
+          </div>
+        </div></div>
+      </div>
+      <!-- 2 -->
+      <div class="acc-item" data-anim>
+        <div class="acc-head" role="button" tabindex="0" aria-expanded="false">2 модуль — Мужские и женские архетипы в отношениях</div>
+        <div class="acc-body"><div class="acc-inner">
+          <div class="acc-list">
+            <ul class="dot-list">
+              <li>4 основных женских архетипа</li>
+              <li>4 основных мужских архетипа</li>
+              <li>Взаимодействие архетипов и формирование выгодного союза</li>
+            </ul>
+            <button class="bonus-btn" type="button" data-bonus="#b2">Показать бонус</button>
+            <div id="b2" class="bonus-panel">Памятка по сочетаниям архетипов: сценарии совместимости и рекомендации.</div>
+          </div>
+        </div></div>
+      </div>
+      <!-- 3 -->
+      <div class="acc-item" data-anim>
+        <div class="acc-head" role="button" tabindex="0" aria-expanded="false">3 модуль — Телесная терапия</div>
+        <div class="acc-body"><div class="acc-inner">
+          <div class="acc-list">
+            <ul class="dot-list">
+              <li>Выявление блоков в теле</li>
+              <li>Избавление от блоков в теле</li>
+              <li>Анализ травм и авторские комплексы</li>
+            </ul>
+            <button class="bonus-btn" type="button" data-bonus="#b3">Показать бонус</button>
+            <div id="b3" class="bonus-panel">Медитация на диагностику и освобождение тела: дыхательные практики + визуализация.</div>
+          </div>
+        </div></div>
+      </div>
+      <!-- 4 -->
+      <div class="acc-item" data-anim>
+        <div class="acc-head" role="button" tabindex="0" aria-expanded="false">4 модуль — Работа с энергией</div>
+        <div class="acc-body"><div class="acc-inner">
+          <div class="acc-list">
+            <ul class="dot-list">
+              <li>Метод Сильвы</li>
+              <li>Осознанное питание</li>
+              <li>Дыхательные практики для восстановления энергополя</li>
+              <li>Книга теней</li>
+            </ul>
+            <button class="bonus-btn" type="button" data-bonus="#b4">Показать бонус</button>
+            <div id="b4" class="bonus-panel">Медитация на заземление энергий: стабилизация, центрирование, «возврат в тело».</div>
+          </div>
+        </div></div>
+      </div>
+      <!-- 5 -->
+      <div class="acc-item" data-anim>
+        <div class="acc-head" role="button" tabindex="0" aria-expanded="false">5 модуль — Интеграция тени и раскрытие внутренней женщины</div>
+        <div class="acc-body"><div class="acc-inner">
+          <div class="acc-list">
+            <ul class="dot-list">
+              <li>Интеграция твоего Анимуса</li>
+              <li>Интеграция твоей Анимы</li>
+              <li>Алхимический союз (соединение полярностей)</li>
+            </ul>
+            <button class="bonus-btn" type="button" data-bonus="#b5">Показать бонус</button>
+            <div id="b5" class="bonus-panel">Медитация на интеграцию Анимы и Анимуса: соединение полярностей, ощущение опоры.</div>
+          </div>
+        </div></div>
+      </div>
+    </div>
+
+    <div class="wrap" style="text-align:center;margin-top:22px" data-anim>
+      <a href="#pricing" class="btn">ЗАНЯТЬ МЕСТО</a>
+    </div>
+  </div>
+</section>
+
+<!-- 4) РЕЗУЛЬТАТЫ -->
+<section id="results">
+  <div class="wrap">
+    <h2 class="h2" data-anim>Результаты после прохождения курса</h2>
+    <ul class="result-list" data-anim>
+      <li><span class="txt">Глубинное понимание выхода из деструктивных сценариев через работу с бессознательным.</span></li>
+      <li><span class="txt">Налаженный контакт с телом, понимание его реакций и желаний.</span></li>
+      <li><span class="txt">Проработка сценариев с внутренним мужчиной; исцеление фигуры отца.</span></li>
+      <li><span class="txt">Проработка сценариев с внутренней женщиной; исцеление фигуры матери.</span></li>
+      <li><span class="txt">Понимание моделей поведения идеального партнёра и гармоничной коммуникации.</span></li>
+      <li><span class="txt">Контакт между сознательным и бессознательным — «ментальный мост» без вытеснения.</span></li>
+      <li><span class="txt">Избавление от телесных травм, улучшение психического и физического здоровья.</span></li>
+      <li><span class="txt">Уверенность рядом с успешными мужчинами и понятные шаги к союзу.</span></li>
+    </ul>
+  </div>
+</section>
+
+<!-- 5) ТАРИФЫ -->
+<section id="pricing">
+  <div class="wrap">
+    <h2 class="h2" data-anim>Тарифы</h2>
+    <div class="pricing" data-anim>
+      <div class="price-card">
+        <div style="font-weight:800;letter-spacing:.3px;color:#6f5822">СТАНДАРТ</div>
+        <div class="price">7 590 ₽</div>
+        <ul class="price-features">
+          <li>14 уроков в записи · доступ 6 месяцев</li>
+          <li>Доступ в закрытый чат участниц</li>
+          <li>4 медитации · доступ 6 месяцев</li>
+        </ul>
+        <a class="btn" href="#" aria-disabled="true" disabled>КУПИТЬ СТАНДАРТ</a>
+      </div>
+
+      <div class="price-card">
+        <div class="ribbon">Лучший выбор</div>
+        <div style="font-weight:800;letter-spacing:.3px;color:#6f5822">ПРЕМИУМ</div>
+        <div class="price">19 590 ₽</div>
+        <ul class="price-features">
+          <li>14 уроков в записи · бессрочный доступ</li>
+          <li>Доступ в закрытый чат участниц</li>
+          <li>Поддержка кураторов-эзотериков и личная поддержка от Медины</li>
+          <li>4 медитации · бессрочный доступ</li>
+        </ul>
+        <a class="btn" href="#" aria-disabled="true" disabled>КУПИТЬ ПРЕМИУМ</a>
+      </div>
+    </div>
+
+    <!-- Чекбоксы согласий -->
+    <div class="checks" data-anim id="consents">
+      <div class="check">
+        <input type="checkbox" id="c1" aria-describedby="c1txt" required>
+        <label id="c1txt" for="c1">
+          Я согласен на обработку моих персональных данных согласно
+          <a href="/privacy" target="_blank" rel="noopener">Политике конфиденциальности</a>.
+        </label>
+      </div>
+      <div class="check">
+        <input type="checkbox" id="c2" aria-describedby="c2txt" required>
+        <label id="c2txt" for="c2">
+          Я согласен на обработку моих персональных данных согласно
+          <a href="/pd-policy" target="_blank" rel="noopener">Политике обработки персональных данных</a>.
+        </label>
+      </div>
+      <div class="check">
+        <input type="checkbox" id="c3" aria-describedby="c3txt" required>
+        <label id="c3txt" for="c3">
+          Я согласен на получение информационных и маркетинговых рассылок
+          (вы можете отказаться в любой момент).
+        </label>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6) ДЛЯ КОГО -->
+<section id="for">
+  <div class="wrap">
+    <h2 class="h2" data-anim>Для кого этот интенсив?</h2>
+    <div class="for-card" data-anim>
+      <ul class="for-grid">
+        <li>Для девушек, которые устали попадать в деструктивные отношения, где их не ценят и не вкладываются.</li>
+        <li>Для девушек, которые хотят взрастить опору в себе и входить в отношения из изобилия, а не дефицита.</li>
+        <li>Для тех, кто хочет попрощаться со стыдом и виной за свою сексуальность и раскрыть её как силу.</li>
+        <li>Для тех, кто повторяет родовые сценарии и хочет найти корень проблемы, убрать и исцелить себя.</li>
+      </ul>
+      <div class="wrap" style="text-align:center;margin-top:18px">
+        <a href="#pricing" class="btn">ХОЧУ НА ИНТЕНСИВ</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- КОНСУЛЬТАЦИЯ + СОЦСЕТИ -->
+<section id="consult">
+  <div class="wrap" data-anim>
+    <div class="consult-card">
+      <h2 class="h2">Остались вопросы?</h2>
+      <p class="consult-sub">Нажми «Получить консультацию», и мы поможем подобрать тариф и ответим на любые вопросы по интенсиву.</p>
+      <a href="#" class="btn">Получить консультацию</a>
+      <div class="socials">
+        <a class="soc" href="#" aria-label="Instagram" title="Instagram">
+          <svg viewBox="0 0 24 24"><path d="M7 2h10a5 5 0 0 1 5 5v10a5 5 0 0 1-5 5H7a5 5 0 0 1-5-5V7a5 5 0 0 1 5-5zm5 5a5 5 0 1 0 0 10 5 5 0 0 0 0-10zm6.5-.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z"/></svg>
+        </a>
+        <a class="soc" href="#" aria-label="Telegram" title="Telegram">
+          <svg viewBox="0 0 24 24"><path d="M9.04 15.52l-.37 5.29c.53 0 .76-.23 1.03-.5l2.48-2.38 5.15 3.77c.94.52 1.62.25 1.88-.87l3.41-15.98h0c.3-1.38-.5-1.92-1.4-1.58L1.56 10.3c-1.33.52-1.31 1.26-.23 1.6l5.26 1.64 12.2-7.7c.57-.35 1.08-.16.65.22"/></svg>
+        </a>
+        <a class="soc" href="mailto:hello@example.com" aria-label="Email" title="Email">
+          <svg viewBox="0 0 24 24"><path d="M2 5h20v14H2zM2 5l10 9L22 5" fill="none" stroke="#1b1d22" stroke-width="2"/></svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">© <span id="y"></span> Ресурс Изобилия</div>
+</footer>
+
+<script>
+  // Год
+  document.getElementById('y').textContent = new Date().getFullYear();
+
+  // Появление
+  const io = new IntersectionObserver((entries)=>entries.forEach(en=>{
+    if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target); }
+  }),{threshold:.16});
+  document.querySelectorAll('[data-anim], .result-list li, .author-list li').forEach(el=>io.observe(el));
+
+  // Аккордеон
+  document.querySelectorAll('.acc-item .acc-head').forEach(head=>{
+    const item=head.parentElement, body=item.querySelector('.acc-body');
+    const toggle=()=>{const open=item.classList.toggle('open'); head.setAttribute('aria-expanded',open); body.style.gridTemplateRows=open?'1fr':'0fr';};
+    head.addEventListener('click',toggle);
+    head.addEventListener('keydown',e=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); toggle(); } });
+  });
+
+  // Бонусы
+  document.querySelectorAll('.bonus-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const panel=document.querySelector(btn.dataset.bonus);
+      if(!panel)return;
+      panel.classList.toggle('show');
+      btn.textContent = panel.classList.contains('show') ? 'Скрыть бонус' : 'Показать бонус';
+    });
+  });
+
+  // Ripple
+  document.querySelectorAll('.btn, .soc').forEach(el=>{
+    el.addEventListener('click', e=>{
+      if(el.hasAttribute('disabled')) return; // не рисуем ripple на заблокированных
+      const r=document.createElement('span'), rect=el.getBoundingClientRect(), size=Math.max(rect.width,rect.height);
+      r.className='ripple'; r.style.width=r.style.height=size+'px';
+      r.style.left=(e.clientX-rect.left-size/2)+'px'; r.style.top=(e.clientY-rect.top-size/2)+'px';
+      el.appendChild(r); setTimeout(()=>r.remove(),600);
+    });
+  });
+
+  // Плавные якоря
+  document.querySelectorAll('a[href^="#"]').forEach(a=>{
+    a.addEventListener('click', e=>{
+      const id=a.getAttribute('href').slice(1), el=document.getElementById(id);
+      if(el){ e.preventDefault(); el.scrollIntoView({behavior:'smooth', block:'start'}); }
+    });
+  });
+
+  // Блокируем покупку, пока не отмечены все согласия
+  (function(){
+    const box = document.getElementById('consents');
+    if(!box) return;
+    const checks = Array.from(box.querySelectorAll('input[type="checkbox"][required]'));
+    const buyBtns = Array.from(document.querySelectorAll('#pricing .price-card .btn'));
+    const setState = ()=>{
+      const allOk = checks.every(c=>c.checked);
+      buyBtns.forEach(b=>{
+        if(allOk){ b.removeAttribute('disabled'); b.setAttribute('aria-disabled','false'); }
+        else { b.setAttribute('disabled',''); b.setAttribute('aria-disabled','true'); }
+      });
+    };
+    // начальное состояние
+    setState();
+    checks.forEach(c=>c.addEventListener('change', setState));
+  })();
+</script>
+</body>
+</html>
