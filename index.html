@@ -136,6 +136,24 @@
     background:linear-gradient(135deg,var(--gold),var(--gold2));
     box-shadow:0 0 10px rgba(205,175,97,.45), inset 0 0 0 2px rgba(255,255,255,.6);
   }
+/* --- FIX: убираем лишние черные маркеры на iPhone / Safari --- */
+.dot-list li,
+.for-grid li,
+.result-list li {
+  list-style: none; /* полностью отключаем стандартные маркеры */
+}
+
+.dot-list li::marker,
+.for-grid li::marker,
+.result-list li::marker {
+  content: ""; /* на случай, если браузер всё же рисует ::marker */
+}
+
+.dot-list, .for-grid, .result-list {
+  margin-left: 0;
+  padding-left: 0;
+}
+/* --- END FIX --- */
 
   /* ===== АВТОР ===== */
   #author .content{max-width:1040px;margin:0 auto}
